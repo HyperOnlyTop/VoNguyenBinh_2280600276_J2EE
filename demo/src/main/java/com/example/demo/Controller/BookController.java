@@ -1,50 +1,59 @@
 package com.example.demo.Controller;
 
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.Model.Book;
 import com.example.demo.Service.BookService;
 
-@RestController
-@RequestMapping("/api/books")
+@Controller
+@RequestMapping("/books")
 public class BookController {
     @Autowired
-     private BookService bookService;
+    private BookService bookService;
     @GetMapping
-    public List<Book> getAllBooks() {
-        return bookService.getAllBooks();
+    public String listBooks(Model model) {
+        model.addAttribute("books", bookService.getAllBooks());
+        return "books";
     }
-    @GetMapping("/{id}")
-    public Book getBookById(@PathVariable int id) {
-        return bookService.getBookById(id);
+    @GetMapping("/add")
+    public String addBookForm(Model model) {
+        model.addAttribute("book", new Book());
+        return "add-book";
     }
-
-    @PostMapping
-    public String addBook(@RequestBody Book book) {
+     @PostMapping("/add")
+    public String addBook(@ModelAttribute Book book) {
         bookService.addBook(book);
-        return "Book added successfully!";
+        return "redirect:/books";
     }
 
-    @PutMapping("/{id}")
-    public String updateBook(@PathVariable int id,
-                             @RequestBody Book updatedBook) {
-        bookService.updateBook(id, updatedBook);
-        return "Book updated successfully!";
+    @GetMapping("/edit/{id}")
+    public String editBookForm(@PathVariable int id, Model model) {
+        for (Book book : bookService.getAllBooks()) {
+            if (book.getId() == id) {
+                model.addAttribute("book", book);
+                break;
+            }
+        }
+        return "edit-book";
     }
 
-    @DeleteMapping("/{id}")
-    public String deleteBook(@PathVariable int id) {
-        bookService.deleteBook(id);
-        return "Book deleted successfully!";
+    @PostMapping("/update")
+    public String updateBook(@ModelAttribute Book book) {
+        bookService.updateBook(book);
+        return "redirect:/books";
     }
+
+    @GetMapping("/delete/{id}")
+    public String deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id.intValue());
+        return "redirect:/books";
+}
 }
